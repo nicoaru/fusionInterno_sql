@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model clientes {
+  id           Int       @id @default(autoincrement())
+  nombre       String?
+  apellido     String?
+  telefono     String?
+  email        String?
+  direccion    String?
+  tipo_cliente String?
+  pedidos      pedidos[]
+}
+
+model insumos {
+  id                Int                @id @default(autoincrement())
+  nombre            String
+  marca             String?
+  stock             Int?
+  compras_insumos   compras_insumos[]
+  herrajes_x_mueble insumos_x_mueble[]
+}
+
+model insumos_x_mueble {
+  id           Int           @id @default(autoincrement())
+  id_mueble    Int?
+  id_insumo    Int?
+  cantidad     Int?
+  reservado    String?
+  herraje     insumos?      @relation(fields: [id_insumo], references: [id])
+  mueble muebles_prod? @relation(fields: [id_mueble], references: [id], onDelete: Cascade)
+
+  @@index([id_insumo], map: "id_insumo")
+  @@index([id_mueble], map: "id_mueble")
+}
+
+model muebles_prod {
+  id                  Int                @id @default(autoincrement())
+  linea               String?
+  modelo              String?
+  largo               Float?
+  alto_total          Float?
+  profundidad         Float?
+  terminacion         String?
+  color               String?
+  terminacion_frentes String?
+  n_puertas           Int?
+  n_cajones           Int?
+  n_cajones_internos  Int?
+  patas_altura        Float?
+  patas_modelo        String?
+  patas_color         String?
+  id_estado           Int?               @default(1)
+  notas               String?
+  cantidad            Int?
+  id_pedido           Int?
+  estandar            Boolean?
+  estado              estados?           @relation(fields: [id_estado], references: [id], onDelete: SetNull)
+  pedido              pedidos?           @relation(fields: [id_pedido], references: [id], onDelete: SetNull)
+  herrajes_x_mueble   insumos_x_mueble[]
+  estadosHistorico    estados_x_mueble[]
+
+  @@index([id_pedido], map: "id_pedido")
+  // @@index([id_estado], map: "id_estado")
+}
+
+model pedidos {
+  id                Int               @id @default(autoincrement())
+  id_cliente        Int?
+  fecha_entrada     DateTime?         //@default(now())
+  fecha_entrega     DateTime?         //@default(now())
+  direccion_entrega String?
+  notas             String?
+  cliente           clientes?         @relation(fields: [id_cliente], references: [id])
+  muebles_prod      muebles_prod[]
+
+  @@index([id_cliente], map: "id_cliente")
+}
+
+model compras_insumos {
+  id           Int              @id @unique(map: "sqlite_autoindex_compras_insumos_1") @default(autoincrement())
+  id_insumo    Int
+  cantidad     Int
+  precio_total Float?
+  fecha        DateTime?        
+  recibido     Int?
+  insumo      insumos           @relation(fields: [id_insumo], references: [id], onDelete: SetNull)
+}
+
+
+model estados {
+  id                  Int      @id @unique(map: "sqlite_autoindex_estados_1") @default(autoincrement())
+  nombre              String
+  muebles_prod        muebles_prod[]
+  estados_x_mueble    estados_x_mueble[]
+}
+
+model estados_x_mueble { 
+  id              Int               @id @unique(map: "sqlite_autoindex_estados_x_muebles_1") @default(autoincrement())
+  id_mueble       Int?        
+  id_estado       Int?
+  fecha           DateTime?         @default(now())
+  mueble          muebles_prod?     @relation(fields: [id_mueble], references: [id], onDelete: Cascade)
+  estado          estados?          @relation(fields: [id_estado], references: [id])
+}
