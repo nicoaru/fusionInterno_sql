@@ -6,29 +6,14 @@ import check from '../../recursos/check.png'
 import cross from '../../recursos/cross.png'
 import {dateStringFromDataObject, dateObjectFromDateString} from '../../utils/utils.js'
 
-function PedidosList({ loading, muebles, error }) {
+function PedidosList({ loading, muebles, error, estados }) {
     
     const [columns, setColumns] = useState([])
 
     let fieldsEstados = []
     useEffect( () => {
-        const getEstados = (itemsList) => {
-            const _estados = []
-             itemsList.forEach(item => {
-                item.estadosHistorico.forEach(estadoHist => {
-                    if(!(_estados.some(elem => elem.id === estadoHist.estado.id))) {
-                        _estados.push(estadoHist.estado)
-                    }
-                })
-            })
-            _estados.sort((a,b) => a.id - b.id)
-            console.log("_estados pL l. 27 => ", _estados)
-            return _estados
-        }
-        const _estadosList = getEstados(muebles)
-        // setEstados(_estadosList)
         const _fieldsEstados = [] 
-        _estadosList.forEach(estado => {
+        estados.forEach(estado => {
             const _newField = { 
                 field: `${estado.nombre}`, 
                 headerName: `${estado.nombre}`,
@@ -45,8 +30,8 @@ function PedidosList({ loading, muebles, error }) {
             }
             _fieldsEstados.push(_newField)
         })
-
-        console.log('fieldsEstados : ', _fieldsEstados)
+        fieldsEstados = _fieldsEstados
+                console.log('fieldsEstados : ', fieldsEstados)
 
         const _columns = [
             {
@@ -108,7 +93,7 @@ function PedidosList({ loading, muebles, error }) {
                     return params.value.nombre
                 }         
             },
-            ..._fieldsEstados
+            ...fieldsEstados
     
     
         ];
@@ -118,7 +103,7 @@ function PedidosList({ loading, muebles, error }) {
     
     const rows = muebles;
     // console.log('rows => ', rows)
-    // console.log("estados : ", estados)    
+    console.log("estados : ", estados)    
 
 
 //         valueFormatter: (params) => {

@@ -6,17 +6,43 @@ const routerMueblesProd = Router()
 // devuelve todos los muebles si no se pasan query
 // o filtrados por querys si se le pasan
 routerMueblesProd.get("/", (req, res) => {
-    let queryObject
-    req.query.queryObject 
-        ? queryObject = JSON.parse(req.query.queryObject)
-        : queryObject = {}
+    let query = req.query.queryObject 
+        ? JSON.parse(req.query.queryObject)
+        : {}
+    
+        const _queryObject = {
+        where: query,
+        include: {
+            pedido: {
+                include: {cliente: true}
+            },
+            estado: true,
+            estadosHistorico: {
+                include: {estado: true}
+            }
+        }
+    }
+    
     // console.log("queryObject => ", queryObject)
-    MueblesProd.readMuebles(req, res, queryObject)        
+    MueblesProd.readMuebles(req, res, _queryObject)        
 })
 
 // devuelve un mueble por id
 routerMueblesProd.get("/:id", (req, res) => {
     const id = Number(req.params.id)
+    const _queryObject = {
+        where: {id: id},
+        include: {
+            pedido: {
+                include: {cliente: true}
+            },
+            estado: true,
+            estadosHistorico: {
+                include: {estado: true}
+            }
+        }
+    }
+
     MueblesProd.readMuebleById(req, res, id)
 })
 

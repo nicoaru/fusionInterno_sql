@@ -13,9 +13,9 @@ class MueblesProdDaoSqlite extends ContenedorSqlite {
     res.json(_resultado)
   }
 
-  async readMuebleById(req, res, id) {
+  async readMuebleById(req, res, queryObject) {
     try{
-      const _resultado = await this.readOne({id})
+      const _resultado = await this.readOne(queryObject)
       res.status(200).json(_resultado)
     }
     catch(error){
@@ -34,6 +34,7 @@ class MueblesProdDaoSqlite extends ContenedorSqlite {
     }
   }
 
+
   async deleteMuebles(req, res, queryObject) {
     try{
       const _resultado = await this.deleteMany(queryObject)
@@ -43,6 +44,7 @@ class MueblesProdDaoSqlite extends ContenedorSqlite {
       console.log("Error dao delete mueble by id => ", error)
     }
   }
+
 
   async createMueble(req, res, newMueble) {
     try{
@@ -56,11 +58,11 @@ class MueblesProdDaoSqlite extends ContenedorSqlite {
     }
   }
 
+
   async createMuebles(req, res, mueblesList) {
     console.log("Entro en createMuebles")
     // console.log("mueblesList => ", mueblesList)
     let _resultados = []
-
     try{
       for(let _mueble of mueblesList) {
         try{

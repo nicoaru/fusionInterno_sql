@@ -17,9 +17,7 @@ class ContenedorSqlite {
     /// Devuelve un sólo registro que matchea con la query, en formato objeto
     readOne( queryObject) {
         const model = this.modelName
-        return prisma[model].findUnique({
-            where: queryObject
-        })  
+        return prisma[model].findUnique(queryObject)  
     }
 
     /// Devuelve todos los registros que matchean con la query

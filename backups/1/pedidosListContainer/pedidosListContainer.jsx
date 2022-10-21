@@ -14,22 +14,33 @@ function PedidosListContainer() {
 
     useEffect(() => {
         setLoading(true)
-        // const getEstados = (itemsList) => {
-        //     const _estados = []
-        //      itemsList.forEach(item => {
-        //         item.estadosHistorico.forEach(estadoHist => {
-        //             if(!(_estados.some(elem => elem.id === estadoHist.estado.id))) {
-        //                 _estados.push(estadoHist.estado)
-        //             }
-        //         })
-        //     })
-        //     console.log("_estados pLC l. 27 => ", _estados)
-        //     return _estados
-        // }
+        const getEstados = (itemsList) => {
+            const _estados = []
+             itemsList.forEach(item => {
+                item.estadosHistorico.forEach(estadoHist => {
+                    if(!(_estados.some(elem => elem.id === estadoHist.estado.id))) {
+                        _estados.push(estadoHist.estado)
+                    }
+                })
+            })
+            console.log("_estados pLC l. 27 => ", _estados)
+            return _estados
+        }
         const getItems = async() => {
             try{
                 const _queryObject = {
-                    id_estado: {notIn: [7]}
+                    where: {
+                        id_estado: {notIn: [7]}
+                    },
+                    include: {
+                        pedido: {
+                            include: {cliente: true}
+                        },
+                        estado: true,
+                        estadosHistorico: {
+                            include: {estado: true}
+                        }
+                    }
                 }
                 const response = await fetch('/api/muebles?'+ new URLSearchParams({queryObject: JSON.stringify(_queryObject)}), {
                     method:'GET'
@@ -42,8 +53,8 @@ function PedidosListContainer() {
                         : console.log(`No hay pedidos en curso`)
                     setItems(_items)
                     console.log("_items => ", _items)
-                    // const _estadosList = getEstados(_items)
-                    // setEstados(_estadosList)
+                    const _estadosList = getEstados(_items)
+                    setEstados(_estadosList)
                 }
                 else{
                     console.log('Respuesta fetch get', response.status, ' ', response.statusText)
@@ -67,7 +78,7 @@ function PedidosListContainer() {
             <h1>
                 Ver Pedidos
             </h1>
-            <PedidosList loading={loading} muebles={items} error={error}  />
+            <PedidosList loading={loading} muebles={items} error={error} estados={estados} />
 
         </Layout>
 
