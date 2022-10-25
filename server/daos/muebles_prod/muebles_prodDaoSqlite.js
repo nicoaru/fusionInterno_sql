@@ -26,7 +26,7 @@ class MueblesProdDaoSqlite extends ContenedorSqlite {
   
   async deleteMuebleById(req, res, id) {    // manejar el error cuando el registro no existe
     try{
-      const _resultado = await this.deleteOne({id})
+      const _resultado = await this.deleteOne(id)
       res.status(200).json(_resultado)
     }
     catch(error){
@@ -86,11 +86,12 @@ class MueblesProdDaoSqlite extends ContenedorSqlite {
 
 
 
-  async updateMueble(req, res, id, _updated) {     // hacer manejo de errore si no existe el mueble
+  async updateMueble(req, res, id, _updated, _includeOptions) {     // hacer manejo de errore si no existe el mueble
     console.log("ID => ", id)
     console.log("_updated => ", _updated)
-    const _resultado = await this.updateOne({id}, _updated)
-    res.status(400).json(_resultado)
+    console.log("_include => ", _includeOptions)
+    const _resultado = await this.updateOne({id}, _updated, _includeOptions)
+    res.status(200).json(_resultado)
   }
   
 

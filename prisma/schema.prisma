@@ -33,8 +33,8 @@ model insumos_x_mueble {
   id_insumo    Int?
   cantidad     Int?
   reservado    String?
-  herraje     insumos?      @relation(fields: [id_insumo], references: [id])
-  mueble muebles_prod? @relation(fields: [id_mueble], references: [id], onDelete: Cascade)
+  insumo       insumos?      @relation(fields: [id_insumo], references: [id])
+  mueble       muebles_prod? @relation(fields: [id_mueble], references: [id], onDelete: Cascade)
 
   @@index([id_insumo], map: "id_insumo")
   @@index([id_mueble], map: "id_mueble")
@@ -63,7 +63,7 @@ model muebles_prod {
   estandar            Boolean?
   estado              estados?           @relation(fields: [id_estado], references: [id], onDelete: SetNull)
   pedido              pedidos?           @relation(fields: [id_pedido], references: [id], onDelete: SetNull)
-  herrajes_x_mueble   insumos_x_mueble[]
+  insumos             insumos_x_mueble[]
   estadosHistorico    estados_x_mueble[]
 
   @@index([id_pedido], map: "id_pedido")

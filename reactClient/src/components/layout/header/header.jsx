@@ -8,7 +8,7 @@ function Header() {
     return (
         <div className="header">
             <NavBar/>
-            <Box sx={{ height: {xs: '75px', md: '150px'}}}></Box>
+            <Box sx={{ height: {xs: '75px', md: '77.75px'}}}></Box>
         </div>
 
     )

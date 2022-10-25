@@ -42,10 +42,10 @@ function NavBar() {
     >
       <Container maxWidth="xl">
         <Toolbar disableGutters
-          sx={{ pt: {md: 3, xs: 0}, display: { xs: 'flex', md: 'block' }, alignItems: 'center' }}
+          sx={{ pt: {md: 1, xs: 0}, display: { xs: 'flex', md: 'block' }, alignItems: 'center' }}
         >
           <Box sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'center'}}>
-            <img src={logoFusion} height='50px' alt='logo'/>
+            <img src={logoFusion} height='35px' alt='logo'/>
           </Box>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
           {pages.map((object) => (
@@ -53,7 +53,7 @@ function NavBar() {
               key={object.page}
               href={object.to}
               onClick={handleCloseNavMenu}
-              sx={{ my: 2, px: '30px', color: 'black' }}
+              sx={{ my: 0, px: '30px', color: 'black', fontSize: 13 }}
             >
               {object.page}
             </Button>

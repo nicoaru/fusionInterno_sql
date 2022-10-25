@@ -51,11 +51,11 @@ class ContenedorSqlite {
 
 
     // elimina un sólo objeto que matchea con la query
-    deleteOne(queryObject) {
-        console.log("queryObject => ", queryObject)
+    deleteOne(id) {
+        console.log("queryObject => ", id)
         const model = this.modelName
         return prisma[model].delete({
-            where: queryObject
+            where: {id: id}
         })  
     }
 
@@ -71,11 +71,12 @@ class ContenedorSqlite {
 
 
     // actualiza el registro que cumple con el 'queryObject' modificando los campos pasados en 'updatedFieldsObject'
-    updateOne(queryObject, updatedFieldsObject) {
+    updateOne(queryObject, updatedFieldsObject, includeObject) {
         const model = this.modelName
         return prisma[model].update({
             where: queryObject,
-            data: updatedFieldsObject
+            data: updatedFieldsObject,
+            include: includeObject
         })  
     }
 

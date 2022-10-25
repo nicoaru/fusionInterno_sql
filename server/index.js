@@ -4,6 +4,8 @@ const {routerFaker} = require('./routes/routerFaker.js')
 const {routerClientes} = require('./routes/routerClientes.js')
 const {routerPedidos} = require('./routes/routerPedidos.js')
 const {routerMueblesProd} = require('./routes/routerMueblesProd.js')
+const {routerEstados} = require('./routes/routerEstados.js')
+
 
 const app = express()
 app.use(express.json())
@@ -12,6 +14,7 @@ app.use("/api/clientes", routerClientes)
 app.use("/api/faker", routerFaker)
 app.use("/api/muebles", routerMueblesProd)
 app.use("/api/pedidos", routerPedidos)
+app.use("/api/estados", routerEstados)
 // app.use("/api/pedidos", routerPedidos)
 // app.use("/api/complementos", routerComplementos)
 // app.use(express.static(path.resolve(__dirname, '..', 'reactClient/build')));
