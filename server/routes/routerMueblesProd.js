@@ -11,20 +11,20 @@ routerMueblesProd.get("/", (req, res) => {
         : {}
     
         const _queryObject = {
-        where: query,
-        include: {
-            pedido: {
-                include: {cliente: true}
-            },
-            estado: true,
-            estadosHistorico: {
-                include: {estado: true}
-            },
-            insumos: {
-                include: {insumo: true}
+            where: query,
+            include: {
+                pedido: {
+                    include: {cliente: true}
+                },
+                estado: true,
+                estadosHistorico: {
+                    include: {estado: true}
+                },
+                insumos: {
+                    include: {insumo: true}
+                }
             }
         }
-    }
     
     // console.log("queryObject => ", queryObject)
     MueblesProd.readMuebles(req, res, _queryObject)        

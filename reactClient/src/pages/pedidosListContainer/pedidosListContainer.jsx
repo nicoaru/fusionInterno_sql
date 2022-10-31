@@ -7,13 +7,13 @@ import { DataConsumer } from '../../context/DataProvider.jsx'
 function PedidosListContainer() {
 
 
-    const {muebles, estados} = DataConsumer()
+    const {muebles, estados, pedidos, clientes} = DataConsumer()
 
     return(
         <Layout>
 
             {/* <PedidosList loading={loading} muebles={items} error={error} estados={estados}/> */}
-            <PedidosList muebles={muebles} estados={estados}/>
+            <PedidosList muebles={muebles} estados={estados} pedidos={pedidos} clientes={clientes}/>
 
         </Layout>
 

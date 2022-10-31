@@ -6,7 +6,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-input {
+/* input {
   border: none;
   background-color: orange;
             border: none;
@@ -15,8 +15,12 @@ input {
             padding: 20px 20px;
             margin: 20px 20px;
             cursor: pointer;
-}
-code {
+} */
+/* code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+} */
+
+hr {
+  margin: 0;
 }

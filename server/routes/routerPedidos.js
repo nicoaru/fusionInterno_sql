@@ -7,12 +7,29 @@ const routerPedidos = Router()
 // devuelve todos los Pedidos si no se pasan query
 // o filtrados por querys si se le pasan
 routerPedidos.get("/", (req, res) => {
-    let queryObject
-    req.query.queryObject 
-        ? queryObject = JSON.parse(req.query.queryObject)
-        : queryObject = {}
+    let query = req.query.queryObject 
+    ? JSON.parse(req.query.queryObject)
+    : {}
+
+    const _queryObject = {
+        where: query,
+        include: {
+            cliente: true,
+            muebles_prod: {
+                select: {
+                    id: true,
+                    modelo: true, 
+                    linea: true,
+                    estado: true,
+                    largo: true, 
+                    alto_total: true, 
+                    profundidad: true
+                }
+            }
+        }
+    }
     // console.log("queryObject => ", queryObject)
-    Pedidos.readPedidos(req, res, queryObject)        
+    Pedidos.readPedidos(req, res, _queryObject)        
 })
 
 // devuelve un Pedido por id

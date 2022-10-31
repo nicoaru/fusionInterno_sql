@@ -4,7 +4,7 @@ import { Stack, Box, Typography } from '@mui/material';
 import { DataGrid, GridActionsCellItem, GridToolbar, GridCellModes } from '@mui/x-data-grid';
 import check from '../../recursos/check.png'
 import cross from '../../recursos/cross.png'
-import {dateStringFromDataObject, dateObjectFromDateString} from '../../utils/utils.js'
+import {dateFromString, stringFromDate, formatDateString} from '../../utils/utils.js'
 import DeleteIcon from '@mui/icons-material/Delete';
 import SecurityIcon from '@mui/icons-material/Security';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
@@ -15,12 +15,9 @@ import { ItemDetails } from "../itemDetails/itemDetails";
 import Button from '@mui/material/Button';
 
 
-function PedidosList({ loading, muebles, error, estados }) {
+function PedidosList({ loading, error, muebles, estados, pedidos, clientes }) {
+    
     const deleteUser = (id_estado) => {}
-    const viewItemDetails = (params) => {
-        setItem(params.row)
-        setOpen(true)
-    }
     const duplicateUser = () => {}
 
 
@@ -68,7 +65,7 @@ function PedidosList({ loading, muebles, error, estados }) {
             valueGetter: (params) => {
                 const _fecha = params.row.estadosHistorico.map(elem => {
                     if(elem.id_estado === estado.id) {
-                        return dateStringFromDataObject(dateObjectFromDateString(elem.fecha))
+                        return formatDateString(elem.fecha)
                     }
                 })
                 const _value = _fecha.join(' ')
@@ -77,6 +74,7 @@ function PedidosList({ loading, muebles, error, estados }) {
         }
         _fieldsEstados.push(_newField)
     })
+
 
     const columns = [
         {
@@ -95,7 +93,7 @@ function PedidosList({ loading, muebles, error, estados }) {
                 <GridActionsCellItem
                     icon={<InsertChartOutlinedIcon />}
                     label="Ver detalles"
-                    onClick={() => viewItemDetails(params)}
+                    onClick={() => handleViewDetail(params.row)}
                 />,
                 <GridActionsCellItem
                     icon={<FileCopyIcon />}
@@ -154,7 +152,7 @@ function PedidosList({ loading, muebles, error, estados }) {
             headerName: 'Fecha ingreso',
             disableColumnMenu: true,
             valueGetter: (params) => {
-                return dateStringFromDataObject(dateObjectFromDateString(params.row.pedido.fecha_entrada))
+                return formatDateString(params.row.pedido.fecha_entrada)
             } 
         },
         { 
@@ -162,7 +160,15 @@ function PedidosList({ loading, muebles, error, estados }) {
             headerName: 'Fecha entrega',
             disableColumnMenu: true,
             valueGetter: (params) => {
-                return dateStringFromDataObject(dateObjectFromDateString(params.row.pedido.fecha_entrega)) 
+                return formatDateString(params.row.pedido.fecha_entrega)
+            } 
+        },
+        { 
+            field: 'fecha_limite_taller', 
+            headerName: 'Fecha límite taller',
+            disableColumnMenu: true,
+            valueGetter: (params) => {
+                return (params.row.pedido.fecha_entrega - 28) 
             } 
         },
         { 
@@ -193,6 +199,10 @@ function PedidosList({ loading, muebles, error, estados }) {
 
     // MODAL itemDetails //
     const [open, setOpen] = useState(false);
+    const handleViewDetail = (item) => {
+        setItem(item)
+        setOpen(true)
+    }
     const handleOpen = () => setOpen(true);
     const handleClose = (event, reason) => {
         if (reason !== 'backdropClick') {
@@ -243,27 +253,21 @@ function PedidosList({ loading, muebles, error, estados }) {
                 }
             </div>
 
-            <Button onClick={handleOpen}>Open modal</Button>
-        
-        <Modal
-          open={open}
-          onClose={handleClose}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-        >
-            <div>
-                <ItemDetails item={item}/>                
-            </div>
+            <Modal
+            open={open}
+            onClose={handleClose}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description"
+            >
+                <div id='modalContainer'>
+                    <ItemDetails item={item} pedidos={pedidos} mueblesList={muebles} setItem={setItem} handleClose={handleClose}/>                
+                </div>
 
-        </Modal>
+            </Modal>
 
         </div>
 
-
-
     )
-
-
 }
 
 export { PedidosList }
