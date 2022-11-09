@@ -7,49 +7,20 @@ class ContenedorSqlite {
     }
 
 
-    // Devuelve la lista de registros almacenados, en formato objeto
-    readAll() {
-        console.log("ReadAll()")
+//
+    // Devuelve un sólo registro que matchea con la query, en formato objeto
+    readOne( findParams) {
         const model = this.modelName
-        return prisma[model].findMany()
+        return prisma[model].findUnique(findParams)  
     }
-
-    /// Devuelve un sólo registro que matchea con la query, en formato objeto
-    readOne( queryObject) {
+//
+    // Devuelve todos los registros que matchean con la query
+    readMany(findParams) {
         const model = this.modelName
-        return prisma[model].findUnique(queryObject)  
+        console.log("queryObject => ", findParams)
+        return prisma[model].findMany(findParams)
     }
-
-    /// Devuelve todos los registros que matchean con la query
-    readMany(queryObject) {
-        const model = this.modelName
-        console.log("queryObject => ", queryObject)
-        return prisma[model].findMany(queryObject)
-    }
-     
-    
-
-    // Crea un nuevo registro // devuelve el registro creado en formato objeto
-    create(object, selectObject) {
-        const model = this.modelName
-        return prisma[model].create({
-            data: object,
-            select: selectObject
-        })  
-    }
-
-    // NO SIRVE PARA SQLITE
-    // Crea múltiples nuevos registros // devuelve la cantidad de registros creados // 
-    // createMany(objectsList) {
-    //     const model = this.modelName
-    //     console.log("Entro en createMany")
-    //     return prisma[model].createMany({
-    //         data: objectsList,
-    //         skipDuplicates: true
-    //     })
-    // }
-
-
+//    
     // elimina un sólo objeto que matchea con la query
     deleteOne(id) {
         console.log("queryObject => ", id)
@@ -58,15 +29,21 @@ class ContenedorSqlite {
             where: {id: id}
         })  
     }
-
+//
     // elimina todos los objetos que matchean con la query
-    deleteMany(queryObject) {
-        console.log("queryObject => ", queryObject)
+    deleteMany(findParams) {
+        console.log("queryObject => ", findParams)
         const model = this.modelName
-        return prisma[model].deleteMany({
-            where: queryObject
-        }
-        ) 
+        return prisma[model].deleteMany(findParams) 
+    }
+     
+
+
+
+    // Crea un nuevo registro // devuelve el registro creado en formato objeto
+    create(createParams) {
+        const model = this.modelName
+        return prisma[model].create(createParams)  
     }
 
 
@@ -101,3 +78,21 @@ class ContenedorSqlite {
 }
 
 module.exports = {ContenedorSqlite}
+
+
+
+
+
+
+
+
+    // NO SIRVE PARA SQLITE
+    // Crea múltiples nuevos registros // devuelve la cantidad de registros creados // 
+    // createMany(objectsList) {
+    //     const model = this.modelName
+    //     console.log("Entro en createMany")
+    //     return prisma[model].createMany({
+    //         data: objectsList,
+    //         skipDuplicates: true
+    //     })
+    // }

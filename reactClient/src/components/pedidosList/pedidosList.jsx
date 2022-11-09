@@ -15,7 +15,7 @@ import { ItemDetails } from "../itemDetails/itemDetails";
 import Button from '@mui/material/Button';
 
 
-function PedidosList({ loading, error, muebles, estados, pedidos, clientes }) {
+function PedidosList({ loading, error, muebles, estados, pedidos, clientes, getMuebles }) {
     
     const deleteUser = (id_estado) => {}
     const duplicateUser = () => {}
@@ -198,16 +198,19 @@ function PedidosList({ loading, error, muebles, estados, pedidos, clientes }) {
 
 
     // MODAL itemDetails //
-    const [open, setOpen] = useState(false);
+    const [openModal, setOpenModal] = useState(false);
     const handleViewDetail = (item) => {
         setItem(item)
-        setOpen(true)
+        setOpenModal(true)
     }
-    const handleOpen = () => setOpen(true);
+
+
     const handleClose = (event, reason) => {
-        if (reason !== 'backdropClick') {
-            setOpen(false)
-          }
+        getMuebles()
+        setOpenModal(false)
+        // if (reason !== 'backdropClick') {
+        //     setOpen(false)
+        //   }
     };
     const [item, setItem] = useState()
 
@@ -254,13 +257,13 @@ function PedidosList({ loading, error, muebles, estados, pedidos, clientes }) {
             </div>
 
             <Modal
-            open={open}
+            open={openModal}
             onClose={handleClose}
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
             >
                 <div id='modalContainer'>
-                    <ItemDetails item={item} pedidos={pedidos} mueblesList={muebles} setItem={setItem} handleClose={handleClose}/>                
+                    <ItemDetails item={item} pedidos={pedidos} mueblesList={muebles} setItem={setItem} />                
                 </div>
 
             </Modal>

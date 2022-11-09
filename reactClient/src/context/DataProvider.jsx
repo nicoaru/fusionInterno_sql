@@ -17,7 +17,28 @@ const [estadosXmueble, setEstadosXmueble] = useState([])
 
 // get muebles
 const getMuebles = async () => {
-    fetch('/api/muebles', {method:'GET'})
+
+    const _queryObject = {
+        where: {}
+    }
+    const _customResult = {
+        include: {
+            pedido: { 
+                include: {cliente: true}
+            },
+            estado: true,
+            estadosHistorico: {
+                include: {estado: true}
+            },
+            insumos: {
+                include: {insumo: true}
+            } 
+        }
+    }
+    const queryParams = {queryObject: JSON.stringify(_queryObject), customResult: JSON.stringify(_customResult)}
+    const urlParams = new URLSearchParams(queryParams)
+
+    fetch(`/api/muebles?`+urlParams, {method:'GET'})
     .then(async response => {
         if(response.ok) {
             const _muebles = await response.json()
@@ -36,6 +57,7 @@ const getMuebles = async () => {
 
 // get estados
 const getEstados = async () => {
+
     fetch('/api/estados', {method:'GET'})
     .then(async response => {
         if(response.ok) {
@@ -55,7 +77,41 @@ const getEstados = async () => {
 
 // get pedidos
 const getPedidos = async () => {
-    fetch('/api/pedidos', {method:'GET'})
+
+    const _queryObject = {
+        where: {}
+    }
+    const _customResult = {
+        include: {
+            cliente: { 
+                select: {
+                    id: true,
+                    nombre: true,
+                    apellido: true,
+                    telefono: true
+                }
+            },
+            muebles_prod: {
+                select: {
+                    id: true,
+                    linea: true,
+                    modelo: true, 
+                    largo: true,
+                    alto_total: true,
+                    profundidad: true,
+                    estado: {
+                        select: {nombre:true}
+                    }
+                }
+            },
+
+        }
+    }
+    const queryParams = {customResult: JSON.stringify(_customResult)}
+    const urlParams = new URLSearchParams(queryParams)
+
+
+    fetch('/api/pedidos?'+urlParams, {method:'GET'})
     .then(async response => {
         if(response.ok) {
             const _muebles = await response.json()
@@ -155,7 +211,7 @@ useEffect(() => {
     getPedidos()
     getClientes()
     getInsumos()
-}, [])
+},[])
 
 console.log('muebles', muebles)
 console.log('estados', estados)

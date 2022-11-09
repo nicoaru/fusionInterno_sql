@@ -6,24 +6,24 @@ class EstadosDaoSqlite extends ContenedorSqlite {
     super(model);
   }
 
-  async readEstados(req, res, queryObject) {
-    console.log("query dao => ", queryObject)
-    const _resultado = await this.readMany(queryObject)
+//
+  async readEstados(req, res, findParams) {
+    console.log("query dao => ", findParams)
+    const _resultado = await this.readMany(findParams)
     // console.log("resultado => ", _resultado)
     res.json(_resultado)
   }
-
-  async readEstadoById(req, res, id) {
+//
+  async readEstadoById(req, res, findParams) {
     try{
-      const _resultado = await this.readOne({id})
+      const _resultado = await this.readOne(findParams)
       res.status(200).json(_resultado)
     }
     catch(error){
-      console.log("Error dao readEstadobyid => ", error)
+      console.log("Error dao readEstadoByid => ", error)
     }
   }
-
-  
+//  
   async deleteEstadoById(req, res, id) {    // manejar el error cuando el registro no existe
     try{
       const _resultado = await this.deleteOne({id})
@@ -33,41 +33,40 @@ class EstadosDaoSqlite extends ContenedorSqlite {
       console.log("Error dao delete Estado by id => ", error)
     }
   }
-
-  async deleteEstados(req, res, queryObject) {
+//
+  async deleteEstados(req, res, deleteParams) {
     try{
-      const _resultado = await this.deleteMany(queryObject)
+      const _resultado = await this.deleteMany(deleteParams)
       res.status(200).json(_resultado)
     }
     catch(error){
       console.log("Error dao delete Estados by id => ", error)
     }
   }
-
-  async createEstado(req, res, newEstado) {
+//
+  async createEstado(req, res, createParams) {
     try{
-      const _resultado = await this.create(newEstado)
+      const _resultado = await this.create(createParams)
       console.log("dao createEstado ok => ", _resultado)
       res.json(_resultado)
     }
     catch(error){
       console.log("Error en Dao createEstado => ", error.message)
-      res.status(400).json({erro: error.message})
+      res.status(400).json({error: {status: 400, message: error.message}})
     }
   }
-
-  async createEstados(req, res, estadosList) {
+//
+  async createEstados(req, res, createParams) {
     console.log("Entro en createEstados")
-    // console.log("estadosList => ", estadosList)
+
     let _resultados = []
 
     try{
-      for(let _estado of estadosList) {
+      for(let _estado of createParams.data) {
         try{
-          // console.log("estado iterando => ", _estado)
-          const index = estadosList.indexOf(_estado)
-          const _resultado = await this.create(_estado, {id: true})
-          _resultados.push({created: true, ..._resultado})
+          const index = createParams.data.indexOf(_estado)
+          const _resultado = await this.create({...createParams, data: _estado})
+          _resultados.push({created: true, data: _resultado})
         }
         catch(error){
           console.log(error.message)
@@ -78,7 +77,7 @@ class EstadosDaoSqlite extends ContenedorSqlite {
     }
     catch(error){
       console.log("Error en Dao createEstados => ", error.message)
-      res.status(200).json({erro: error.message})
+      res.status(400).json({error: {message: error.message, status: 400}})
     }
   }
 

@@ -1,8 +1,11 @@
 import React, {useState, useEffect} from "react";
-import { Button, Typography, TextField, Box, Stack, Accordion, AccordionSummary, AccordionDetails, Input, List, ListItem, ListItemButton, ListItemText, Collapse  } from "@mui/material";
-import { ConnectingAirportsOutlined, ExpandLess, ExpandMore } from "@mui/icons-material"
+import { Button, Typography, TextField, Box, Dialog, Stack, Accordion, AccordionSummary, AccordionDetails, InputLabel, Input, List, ListItem, ListItemButton, ListItemText, Collapse, Select, MenuItem, FormControl } from "@mui/material";
+import { CommentsDisabledOutlined, ConnectingAirportsOutlined, ExpandLess, ExpandMore } from "@mui/icons-material"
+import RemoveCircleTwoToneIcon from '@mui/icons-material/RemoveCircleTwoTone';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {dateFromString, stringFromDate, formatDateString} from '../../utils/utils.js'
+import { DialogMultipleValueChange } from "./dialogMultipleValueChange/dialogMultipleValueChange.jsx";
+import { DataConsumer } from '../../context/DataProvider.jsx'
 import './itemDetails.css'
 
 
@@ -27,54 +30,135 @@ const mainBoxStyle = {
 
 
 
-function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
-    
-    console.log('item =>', item)
-    console.log('pedidos => ', pedidos)
+function ItemDetails({item, setItem}) {
 
+    // context
+    const {muebles, estados, pedidos, clientes, getMuebles} = DataConsumer()
+    
+    // useEffect
     useEffect(() => {
         setItemCopy({...item})
     }, [item])
+    // states
+    const [showMuebles, setShowMuebles] = useState(false) //booleano para mostrar los otros muebles
+    const [isEditable, setIsEditable] = useState(false)   //boleano para habilitar/deshabilitar edicion onDoubleClick/onBlur
+    const [itemCopy, setItemCopy] = useState({ ...item})  // trabajo sobre itemCopy
+    const [oldValue, setOldValue] = useState()
 
-    const [itemCopy, setItemCopy] = useState({ ...item})
-    console.log('itemCopy =>', itemCopy)
-
+    //- probar hacer un llamado nuevo cada vez. No laburar con la lista guardada en el estado del context. Para que actualice los otros muebles del pedido
+    // Pedido al que pertenece el mueble
     const pedido = pedidos.find(elem => elem.id === item.id_pedido)
-    console.log('pedido ', pedido)
+    // Lista de otros muebles del mismo pedido
+    const otrosMuebles = pedido.muebles_prod.map(elem => muebles.find(mueble => mueble.id === elem.id)).filter(elem => elem.id !== item.id)
 
-    const otrosMuebles = pedido.muebles_prod.map(elem => mueblesList.find(mueble => mueble.id === elem.id)).filter(elem => elem !== item)
-    console.log('otrosMuebles', otrosMuebles)
-    
+    console.log("itemCopy => ", itemCopy)
 
-    const changeItemToShow = (itemCopy) => {
+//- punto de backup
 
-    }
+    // handlers
+    const enableEdit = (e, field) => {
+        console.log("se disparo enable edit", e)
 
-
-
-    // useStates
-    const [showMuebles, setShowMuebles] = useState(false)
-    const [isEditable, setIsEditable] = useState(false)
-    
-    // handler
-    const enableEdit = () => {
+        const _oldValue = itemCopy[field]
+        setOldValue(_oldValue)
         setIsEditable(true)
-    }
-    const disableEdit = () => {
-        setIsEditable(false)
-    }
-    const handleShowMuebles = () => {
-        setShowMuebles(!showMuebles)
-    }
-    const handlevalueChange = (event, modifiedField) => {
 
-        const _itemCopy = {...itemCopy, [modifiedField]: event.target.value}
-        console.log('_itemCopy => ', _itemCopy)
+        // console.log("event enableEdit => ", e)
+        // console.log('enableEdt field => ', field)
+        console.log("oldValue => ", _oldValue)          
+    }
+
+    const handleValueChange = (e, field) => {
+        // console.log("onChange target => ", e.target)
+        // console.log("modifiedField en handleValueChange => ", e.target.name)
+        // console.log("dataset => ", e.target.dataset?.type)
+        
+        const _newValue = e.target.dataset?.type === 'number'
+            ? Number(e.target.value)
+            : (e.target.value == 'true' || e.target.value == 'false')
+                ? JSON.parse(e.target.value)
+                : e.target.value
+
+        const _fieldValue = {[field]: _newValue}
+        const _itemCopy = {...itemCopy, ..._fieldValue}       
         setItemCopy(_itemCopy)
-        setTimeout(() => console.log('item => ', item), 7000)
+
+        // console.log('onChange _newValue => ', _newValue)
+        console.log("onChange _fieldValue => ", _fieldValue)
+        // console.log('_itemCopy => ', _itemCopy)
+
     };
 
+    const disableEdit = async (e) => {
+        // console.log("event disable edit => ", e)
+        // console.log("disableEdit target value => ", e.target.value)
+        if(isEditable === true) {
+            const field = e.target.name
+            const _newValue = itemCopy[field]
+
+            console.log("Hay cambios?", !(oldValue === _newValue))
+
+            const _field_value = {[field]: _newValue}
+            if(!(oldValue === _newValue)) {
+                console.log("Hay cambios, vamos a grabarlos!")
+                const result = await saveValue(itemCopy.id, _field_value)
+                console.log("result => ", result)
+                if(result.error) {
+                    console.log("Falló el grabarlo en la DB, dejemos el valor que estaba antes, mejor...")
+                    setItemCopy({...itemCopy, [e.target.name]: oldValue})
+                }
+                else { setItem(result) } // setear de nuevo el item
+            }
+            else { console.log("No hay cambios, dejemos todo como esta!") }
+            setIsEditable(false)
+        }
+
+        // console.log("disableEdit _newValue => ", _newValue)        
+    }
+
     
+
+    // saveValue
+    const saveValue = async (itemId, newValue) => {
+        console.log("saveValue newValue ", newValue)
+        try {
+            console.log(`/api/muebles/${itemId}`)
+            const response = await fetch(`/api/muebles/${itemId}`, {
+                method: 'PATCH', 
+                body: JSON.stringify(newValue),
+                headers: {"Content-Type": "application/json"}
+            })
+            console.log("response ", response)
+            if(response.ok) {
+                const _updatedOk = await response.json()
+                return _updatedOk
+
+            }
+            else {
+                const error = {status: response.status, message: response.statusText}
+                console.log(`Error ${error.status} - ${error.message}`)
+                return {error}
+            }
+        }
+        catch(e) {
+            const error = {status: 0, message: 'Algo salió mal. No se pudieron guardar los cambios'}
+            console.log(`Error ${error.status} - ${error.message}`)
+            return {error}
+        }        
+    }
+
+
+    const toggleShowMuebles = () => {
+        setShowMuebles(!showMuebles)
+    }
+
+    
+    //dialog nombreMueble
+    const [openDialog, setOpenDialog] = useState(false);
+
+
+
+
 
 
     return (
@@ -100,12 +184,15 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                             <Box>
                                 <TextField
                                     id="cliente"
+                                    name="cliente"
                                     label="Cliente"
                                     value={`${itemCopy.pedido.cliente.nombre || ' '} ${itemCopy.pedido.cliente.apellido || ' '}`}
                                     size={'small'}
                                     margin={'dense'}
                                     inputProps={
-                                        {readOnly: true,
+                                        {
+                                        disabled: true,
+                                        readOnly: true,
                                             sx: {
                                                 fontSize: 14,
                                                 px: 1, 
@@ -117,12 +204,14 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                                 />
                                 <TextField
                                     id="direccion_entrega"
+                                    name="direccion_entrega"
                                     label="Dirección de entrega"
                                     value={`${itemCopy.pedido.direccion_entrega || ' '}`}
                                     size={'small'}
                                     margin={'dense'}
                                     inputProps={
-                                        {readOnly: true,
+                                        {disabled: true,
+                                            readOnly: true,
                                             sx: {
                                                 fontSize: 14,
                                                 px: 1, 
@@ -132,12 +221,14 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                                     }
                                 />                                
                                 <TextField
-                                    id="fechaEntrada"
+                                    id="fecha_entrada"
+                                    name="fecha_entrada"
                                     label="Fecha de entrada"
                                     value={formatDateString(pedido.fecha_entrada || ' ')}
                                     size={'small'}
                                     inputProps={
-                                        {readOnly: true,
+                                        {disabled: true,
+                                            readOnly: true,
                                             sx: {
                                                 fontSize: 14,
                                                 px: 1, 
@@ -147,12 +238,14 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                                     }
                                 />
                                 <TextField
-                                    id="fechaEntrega"
+                                    id="fecha_entrega"
+                                    name="fecha_entrega"
                                     label="Fecha de entrega"
                                     value={formatDateString(pedido.fecha_entrega) || ' '}
                                     size={'small'}
                                     inputProps={
-                                        {readOnly: true,
+                                        {disabled: true,
+                                            readOnly: true,
                                             sx: {
                                                 fontSize: 14,
                                                 px: 1, 
@@ -162,9 +255,10 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                                     }
                                 />
                                 <TextField
-                                    id="fechaLimiteTaller"
+                                    id="fecha_limite_taller"
+                                    name="largo"
                                     label="Fecha límite taller"
-                                    value={ pedido.fechaLimiteTaller || ' '}
+                                    value={ pedido.fecha_limite_taller || ' '}
                                     size={'small'}
                                     inputProps={{
                                         readOnly: true,
@@ -177,7 +271,7 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                                 /> 
                                 
                                 <List dense>
-                                    <ListItemButton onClick={handleShowMuebles}>
+                                    <ListItemButton onClick={toggleShowMuebles}>
                                         <Typography>Muebles del mismo pedido</Typography>
                                         {showMuebles ? <ExpandLess /> : <ExpandMore />}
                                     </ListItemButton>
@@ -218,11 +312,12 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                         </AccordionSummary>
                         <AccordionDetails>
                             <TextField
-                                id="nombreMueble"
+                                id="nombre_mueble"
+                                name="nombre_mueble"
                                 label="Mueble"
                                 value={`${itemCopy.modelo || ' '} - ${itemCopy.linea || ' '}`}
-                                onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
+                                onDoubleClick={() => setOpenDialog(true)}
+                                onBlur={(e) => disableEdit(e)}
                                 size={'small'}
                                 inputProps={{
                                     readOnly: !isEditable,
@@ -231,37 +326,24 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                                         px: 1, 
                                         py: 0.75
                                     }
-                                
                                 }}
                             />
-            
+                            <Dialog disableEscapeKeyDown open={openDialog} >
+                                <DialogMultipleValueChange setOpenDialog={setOpenDialog} itemCopy={itemCopy} isEditable={isEditable} enableEdit={enableEdit} disableEdit={disableEdit} handleValueChange={handleValueChange}/>
+                            </Dialog>
+                            
+
+
                             <TextField
-                                id="estado"
+                                id="id_estado"
+                                name="id_estado"
                                 label="Estado"
-                                value={itemCopy.estado.nombre || ' '}
-                                onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
+                                select
+                                value={itemCopy.id_estado || ''}
+                                onDoubleClick={(e) => enableEdit(e, e.target.id)}
+                                onBlur={(e) => disableEdit(e)}
+                                onChange={(e) => handleValueChange(e, e.target.name)}
                                 size={'small'}
-                                inputProps={{
-                                    readOnly: !isEditable,
-                                    ['data-estado']: `${itemCopy.estado.id}`,
-                                    sx: {
-                                        fontSize: 14,
-                                        px: 1, 
-                                        py: 0.75
-                                    }
-                                
-                            }}
-                                
-                            />    
-                            <TextField
-                                id="largo"
-                                label="Largo"
-                                value={itemCopy.largo || ' '}
-                                onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
-                                size={'small'}
-                                onChange={(e)=> handlevalueChange(e, 'largo')}
                                 inputProps={{
                                     readOnly: !isEditable,
                                     sx: {
@@ -269,50 +351,84 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                                         px: 1, 
                                         py: 0.75
                                     }
-                                
                                 }}
-                            />    
-                            <TextField
-                                id="alto_total"
-                                label="Alto"
-                                value={itemCopy.alto_total || ' '}
-                                onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
-                                size={'small'}
-                                inputProps={{
-                                    readOnly: !isEditable,
-                                    sx: {
-                                        fontSize: 14,
-                                        px: 1, 
-                                        py: 0.75
-                                    }
-                                
-                                }}
-                            />                
-                            <TextField
-                                id="profundidad"
-                                label="Profundidad"
-                                value={itemCopy.profundidad || ' '}
-                                onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
-                                size={'small'}
-                                inputProps={{
-                                    readOnly: !isEditable,
-                                    sx: {
-                                        fontSize: 14,
-                                        px: 1, 
-                                        py: 0.75
-                                    }
-                                
-                                }}
-                            />                
+                            >
+                                <MenuItem value='' disabled>Estado</MenuItem>
+                                {estados.map(elem => <MenuItem key={elem.id} value={elem.id}>{elem.nombre}</MenuItem>)}
+                            </TextField>
+
+                            <Box>
+                                <TextField
+                                    id="largo"
+                                    name="largo"
+                                    label="Largo"
+                                    value={itemCopy.largo || ' '}
+                                    onDoubleClick={(e) => enableEdit(e, e.target.name)}
+                                    onBlur={(e) => disableEdit(e)}
+                                    size={'small'}
+                                    onChange={(e) => handleValueChange(e, e.target.name)}
+                                    inputProps={{
+                                        readOnly: !isEditable,
+                                        "data-type": 'number',
+                                        sx: {
+                                            fontSize: 14,
+                                            px: 1, 
+                                            py: 0.75
+                                        }
+                                    
+                                    }}
+                                />    
+                                <TextField
+                                    id="alto_total"
+                                    name="alto_total"
+                                    label="Alto"
+                                    value={itemCopy.alto_total || ' '}
+                                    onDoubleClick={(e) => enableEdit(e, e.target.name)}
+                                    onBlur={(e) => disableEdit(e)}
+                                    onChange={(e)=> handleValueChange(e)}                                    
+                                    size={'small'}
+                                    inputProps={{
+                                        readOnly: !isEditable,
+                                        "data-type": 'number',
+                                        sx: {
+                                            fontSize: 14,
+                                            px: 1, 
+                                            py: 0.75
+                                        }
+                                    
+                                    }}
+                                />                
+                                <TextField
+                                    id="profundidad"
+                                    name="profundidad"
+                                    label="Profundidad"
+                                    value={itemCopy.profundidad || ' '}
+                                    onDoubleClick={(e) => enableEdit(e, e.target.name)}
+                                    onBlur={(e) => disableEdit(e)}
+                                    onChange={(e)=> handleValueChange(e)}                                    
+                                    size={'small'}
+                                    inputProps={{
+                                        readOnly: !isEditable,
+                                        "data-type": 'number',
+                                        sx: {
+                                            fontSize: 14,
+                                            px: 1, 
+                                            py: 0.75
+                                        }
+                                    
+                                    }}
+                                />                
+                            </Box>
+
                             <TextField
                                 id="terminacion"
+                                name="terminacion"
                                 label="Terminación"
                                 value={itemCopy.terminacion || ' '}
                                 onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
+                                onBlur={(e) => disableEdit(e, 'id_estado')}
                                 size={'small'}
+                                onChange={(e)=> handleValueChange(e, e.target.id)}
                                 inputProps={{
                                     readOnly: !isEditable,
                                     sx: {
@@ -325,11 +441,13 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                             />    
                             <TextField
                                 id="color"
+                                name="color"
                                 label="Color"
                                 value={itemCopy.color || ' '}
                                 onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
+                                onBlur={(e) => disableEdit(e, 'id_estado')}
                                 size={'small'}
+                                onChange={(e)=> handleValueChange(e, e.target.id)}
                                 inputProps={{
                                     readOnly: !isEditable,
                                     sx: {
@@ -342,11 +460,13 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                             />    
                                 <TextField
                                 id="terminacion_frentes"
+                                name="terminacion_frentes"
                                 label="Terminación de frentes"
                                 value={itemCopy.terminacion_frentes || ' '}
                                 onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
+                                onBlur={(e) => disableEdit(e, 'id_estado')}
                                 size={'small'}
+                                onChange={(e)=> handleValueChange(e, e.target.id)}
                                 inputProps={{
                                     readOnly: !isEditable,
                                     sx: {
@@ -359,13 +479,16 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                             />    
                             <TextField
                                 id="n_puertas"
+                                name="n_puertas"
                                 label="Cantidad puertas"
                                 value={itemCopy.n_puertas || ' '}
                                 onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
+                                onBlur={(e) => disableEdit(e, 'id_estado')}
                                 size={'small'}
+                                onChange={(e)=> handleValueChange(e, e.target.id)}
                                 inputProps={{
                                     readOnly: !isEditable,
+                                    "data-type": 'number',
                                     sx: {
                                         fontSize: 14,
                                         px: 1, 
@@ -376,13 +499,16 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                             />    
                             <TextField
                                 id="n_cajones"
+                                name="n_cajones"
                                 label="Cantidad cajones"
                                 value={itemCopy.n_cajones || ' '}
                                 onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
+                                onBlur={(e) => disableEdit(e, 'id_estado')}
                                 size={'small'}
+                                onChange={(e)=> handleValueChange(e, e.target.id)}
                                 inputProps={{
                                     readOnly: !isEditable,
+                                    "data-type": 'number',
                                     sx: {
                                         fontSize: 14,
                                         px: 1, 
@@ -393,11 +519,13 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                             />    
                             <TextField
                                 id="interior_cajones"
+                                name="interior_cajones"
                                 label="Interior cajones"
                                 value={`${itemCopy.interior_cajones || ' '}`}
                                 onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
+                                onBlur={(e) => disableEdit(e, 'id_estado')}
                                 size={'small'}
+                                onChange={(e)=> handleValueChange(e, e.target.id)}
                                 inputProps={{
                                     readOnly: !isEditable,
                                     sx: {
@@ -410,13 +538,16 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                             />    
                             <TextField
                                 id="n_cajones_internos"
+                                name="n_cajones_internos"
                                 label="Cantiad cajones internos"
                                 value={itemCopy.n_cajones_internos || ' '}
                                 onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
+                                onBlur={(e) => disableEdit(e, 'id_estado')}
                                 size={'small'}
+                                onChange={(e)=> handleValueChange(e, e.target.id)}
                                 inputProps={{
                                     readOnly: !isEditable,
+                                    "data-type": 'number',
                                     sx: {
                                         fontSize: 14,
                                         px: 1, 
@@ -427,13 +558,16 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                             />    
                             <TextField
                                 id="patas_altura"
+                                name="patas_altura"
                                 label="Altura patas"
                                 value={itemCopy.patas_altura || ' '}
                                 onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
+                                onBlur={(e) => disableEdit(e, 'id_estado')}
                                 size={'small'}
+                                onChange={(e)=> handleValueChange(e, e.target.id)}
                                 inputProps={{
                                     readOnly: !isEditable,
+                                    "data-type": 'number',
                                     sx: {
                                         fontSize: 14,
                                         px: 1, 
@@ -445,11 +579,13 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
 
                             <TextField
                                 id="patas_modelo"
+                                name="patas_modelo"
                                 label="Modelo patas"
                                 value={itemCopy.patas_modelo || ' '}
                                 onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
+                                onBlur={(e) => disableEdit(e, 'id_estado')}
                                 size={'small'}
+                                onChange={(e)=> handleValueChange(e, e.target.id)}
                                 inputProps={{
                                     readOnly: !isEditable,
                                     sx: {
@@ -462,11 +598,13 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                             />    
                             <TextField
                                 id="patas_color"
+                                name="patas_color"
                                 label="Color patas"
                                 value={itemCopy.patas_color || ' '}
                                 onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
+                                onBlur={(e) => disableEdit(e, 'id_estado')}
                                 size={'small'}
+                                onChange={(e)=> handleValueChange(e, e.target.id)}
                                 inputProps={{
                                     readOnly: !isEditable,
                                     sx: {
@@ -478,12 +616,14 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                             />    
                             <TextField
                                 id="notas"
+                                name="notas"
                                 label="Notas"
                                 value={itemCopy.notas || ' '}
                                 multiline
                                 onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
+                                onBlur={(e) => disableEdit(e, 'id_estado')}
                                 size={'small'}
+                                onChange={(e)=> handleValueChange(e, e.target.id)}
                                 InputProps={{
                                     sx: {
                                         fontSize: 14,
@@ -502,13 +642,16 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                             />    
                             <TextField
                                 id="cantidad"
+                                name="cantidad"
                                 label="Cantidad"
                                 value={itemCopy.cantidad || ' '}
                                 onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
+                                onBlur={(e) => disableEdit(e, 'id_estado')}
                                 size={'small'}
+                                onChange={(e)=> handleValueChange(e, e.target.id)}
                                 inputProps={{
                                     readOnly: !isEditable,
+                                    "data-type": 'number',
                                     sx: {
                                         fontSize: 14,
                                         px: 1, 
@@ -519,10 +662,13 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                             />    
                             <TextField
                                 id="estandar"
+                                name="estandar"
                                 label="Estandar"
-                                value={itemCopy.estandar || ' '}
-                                onDoubleClick={enableEdit}
-                                onBlur={disableEdit}
+                                select
+                                value={JSON.stringify(itemCopy.estandar) || ' ' }
+                                onDoubleClick={(e) => enableEdit(e, e.target.name)}
+                                onBlur={(e) => disableEdit(e)}
+                                onChange={(e) => handleValueChange(e, e.target.name)}
                                 size={'small'}
                                 inputProps={{
                                     readOnly: !isEditable,
@@ -531,9 +677,12 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                                         px: 1, 
                                         py: 0.75
                                     }
-                                
                                 }}
-                            />  
+                            >
+                                <MenuItem value=' ' disabled>Estandar</MenuItem>
+                                <MenuItem value='true'>Si</MenuItem>
+                                <MenuItem value='false'>No</MenuItem>
+                            </TextField> 
 
 
                         </AccordionDetails>
@@ -560,15 +709,16 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                             <Box>
                                 <Button>Agregar insumo</Button>
                             </Box>
-                            <Box>
+                            <Stack>
+                                {/* cambiar input a Input */}
                                 {itemCopy.insumos.map(elem => { 
                                     console.log('#insumo => ', elem.id_insumo, elem.cantidad)
-                                    return <div key={elem.id}>
-                                            <input value={elem.insumo.nombre}/> 
-                                            <input value={elem.cantidad}/>
-                                        </div> 
+                                    return <Box key={elem.id} sx={{display: 'inline-flex', border: 1}}>
+                                            <Input value={elem.cantidad} inputProps={{size: 3}}/>
+                                            <Input value={elem.insumo.nombre}/> 
+                                        </Box> 
                                 })}                                
-                            </Box>
+                            </Stack>
 
             
                         </AccordionDetails>
@@ -587,7 +737,7 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                         </AccordionSummary>
                         <AccordionDetails>
                             {itemCopy.estadosHistorico.map((elem, index) => 
-                                <div key={elem.id}>
+                                <Box key={elem.id} sx={{display:'flex', alignItems: 'center'}}>
                                     <TextField
                                         id={`estado_${index+1}`}
                                         label={formatDateString(elem.fecha)}
@@ -602,7 +752,8 @@ function ItemDetails({item, mueblesList, pedidos, setItem, handleClose}) {
                                             }}
                                         }
                                     />
-                                </div>
+                                    <RemoveCircleTwoToneIcon/>
+                                </Box>
                             )} 
                         </AccordionDetails>
                     </Accordion>

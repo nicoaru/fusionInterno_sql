@@ -2,75 +2,88 @@ const { Estados } = require("../daos/daos.js")
 const { Router } = require("express")
 const routerEstados = Router()
 
-
-// devuelve todos los muebles si no se pasan query
-// o filtrados por querys si se le pasan
+//
+// devuelve todos los estados si no se pasan query, o filtrados por querys si se le pasan
 routerEstados.get("/", (req, res) => {
-    let query = req.query.queryObject 
+    const queryObject = req.query.queryObject 
         ? JSON.parse(req.query.queryObject)
         : {}
-    const _queryObject = {where: query}
-    Estados.readEstados(req, res, _queryObject)        
-})
+    const customResult = req.query.customResult
+        ? JSON.parse(req.query.customResult)
+        : {}
+    const findParams = {... queryObject, ...customResult}
 
-// devuelve un mueble por id
+    console.log('findParams api/muebles => ', findParams)
+
+    Estados.readEstados(req, res, findParams)        
+})
+//
+// devuelve un estado por id
 routerEstados.get("/:id", (req, res) => {
     const id = Number(req.params.id)
-    const _queryObject = {
-        where: {id: id},
-        include: {
-            pedido: {
-                include: {cliente: true}
-            },
-            estado: true,
-            estadosHistorico: {
-                include: {estado: true}
-            }
-        }
-    }
+    const queryObject = {where: {id: id}}
+    const customResult = req.query.customResult
+        ? JSON.parse(req.query.customResult)
+        : {}
 
-    Estados.readMuebleById(req, res, _queryObject)
+    const findParams = {...queryObject, ...customResult}
+
+    console.log('findParams api/estados/:id => ', findParams)
+
+
+    Estados.readEstadoById(req, res, findParams)
 })
-
-// elimina un mueble por id // devuelve el registro eliminado en formato objeto
+//
+// elimina un estado por id // devuelve el registro eliminado en formato objeto
 routerEstados.delete("/:id", (req, res) => {
     const id = Number(req.params.id)
     Estados.deleteMuebleById(req, res, id)
 })
-
-// elimina los muebles que coinciden con la query // devuelve un count con la cantidad de eliminados 
+//
+// elimina los estados que coinciden con la query // devuelve un count con la cantidad de eliminados 
 routerEstados.delete("/", (req, res) => {
-    console.log("query => ", req.query)
-    const queryObject = JSON.parse(req.query.queryObject)
-    Estados.deleteMuebles(req, res, queryObject)
+    const deleteParams = req.query.queryObject 
+        ? JSON.parse(req.query.queryObject)
+        : {}
+
+    Estados.deleteEstados(req, res, deleteParams)
 })
-
-
-// crea un mueble nuevo y devuelve el registro creado en formato objeto
-// o crea varios muebles nuevos y devuelve una lista de objetos confirmando o rechazando cada operacion
+// crea un estado nuevo y devuelve el registro creado en formato objeto, o crea varios estados nuevos y devuelve una lista de objetos confirmando o rechazando cada operacion
 routerEstados.post("/", (req, res) => {
     console.log("req.body => ", req.body)
 
-    if(Array.isArray(req.body)) {
-        console.log("Entró en 'Crear varios muebles")
-        Estados.createMuebles(req, res, req.body)
+    const data = req.body.data
+        ? req.body.data
+        : {}
+    const customResult = req.body.customResult
+        ? req.body.customResult
+        : {}
+    const createParams = {data: data, ...customResult}
+
+    if(Array.isArray(createParams.data)) {
+        console.log("Entró en 'Crear varios estados")
+        Estados.createEstados(req, res, createParams)
     }
-    else if(Object.keys(req.body).length > 0) {
-        console.log("Entró en 'Crear un mueble")
-        Estados.createMueble(req, res, req.body)
+    else if(Object.keys(createParams.data).length > 0) {
+        console.log("Entró en Crear un Estado")
+        Estados.createEstado(req, res, createParams)
     }
     else {
-        console.log("Entró en POST api/muebles sin contenido para crear nuevo mueble")
+        console.log("Entró en POST api/estados sin contenido para crear nuevo estado")
         res.status(400).json({message: 'No se recibio objeto para crear nuevo registro en DB'})
     }
 })
 
-// actualiza mueble por Id modificando los campos pasados en 'updatedFields'
+
+
+
+
+// actualiza estado por Id modificando los campos pasados en 'updatedFields'
 routerEstados.patch("/:id", (req, res) => {
     const updatedFields = req.body
     const id = Number(req.params.id)
     console.log("updatedFields => ", updatedFields)
-    Estados.updateMueble(req, res, id, updatedFields)
+    Estados.updateEstado(req, res, id, updatedFields)
 })
 
 

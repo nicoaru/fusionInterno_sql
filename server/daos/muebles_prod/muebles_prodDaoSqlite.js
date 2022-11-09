@@ -6,24 +6,23 @@ class MueblesProdDaoSqlite extends ContenedorSqlite {
     super(model);
   }
 
-  async readMuebles(req, res, queryObject) {
-
-    const _resultado = await this.readMany(queryObject)
+//
+  async readMuebles(req, res, findParams) {
+    const resultado = await this.readMany(findParams)
     // console.log("resultado => ", _resultado)
-    res.json(_resultado)
+    res.json(resultado)
   }
-
-  async readMuebleById(req, res, queryObject) {
+//
+  async readMuebleById(req, res, findParams) {
     try{
-      const _resultado = await this.readOne(queryObject)
+      const _resultado = await this.readOne(findParams)
       res.status(200).json(_resultado)
     }
     catch(error){
       console.log("Error dao mueble by id => ", error)
     }
   }
-
-  
+//
   async deleteMuebleById(req, res, id) {    // manejar el error cuando el registro no existe
     try{
       const _resultado = await this.deleteOne(id)
@@ -33,43 +32,40 @@ class MueblesProdDaoSqlite extends ContenedorSqlite {
       console.log("Error dao delete mueble by id => ", error)
     }
   }
-
-
-  async deleteMuebles(req, res, queryObject) {
+//
+  async deleteMuebles(req, res, deleteParams) {
     try{
-      const _resultado = await this.deleteMany(queryObject)
+      const _resultado = await this.deleteMany(deleteParams)
       res.status(200).json(_resultado)
     }
     catch(error){
       console.log("Error dao delete mueble by id => ", error)
     }
   }
-
-
-  async createMueble(req, res, newMueble) {
+//
+  async createMueble(req, res, createParams) {
     try{
-      const _resultado = await this.create(newMueble)
-      console.log("dao createCliente ok => ", _resultado)
+      const _resultado = await this.create(createParams)
+      console.log("dao createMueble ok => ", _resultado)
       res.json(_resultado)
     }
     catch(error){
       console.log("Error en Dao createMueble => ", error.message)
-      res.status(400).json({erro: error.message})
+      res.status(400).json({error: {status: 400, message: error.message}})
     }
   }
-
-
-  async createMuebles(req, res, mueblesList) {
+//
+  async createMuebles(req, res, createParams) {
     console.log("Entro en createMuebles")
     // console.log("mueblesList => ", mueblesList)
     let _resultados = []
     try{
-      for(let _mueble of mueblesList) {
+      for(let _mueble of createParams.data) {
         try{
           // console.log("mueble iterando => ", _mueble)
-          const index = mueblesList.indexOf(_mueble)
-          const _resultado = await this.create(_mueble, {id: true})
-          _resultados.push({created: true, ..._resultado})
+          const index = createParams.data.indexOf(_mueble)
+          const _resultado = await this.create({...createParams, data: _mueble})
+          _resultados.push({created: true, data: _resultado})
         }
         catch(error){
           console.log(error.message)
@@ -80,7 +76,7 @@ class MueblesProdDaoSqlite extends ContenedorSqlite {
     }
     catch(error){
       console.log("Error en Dao createMuebles => ", error.message)
-      res.status(200).json({erro: error.message})
+      res.status(400).json({error: {message: error.message, status: 400}})
     }
   }
 
