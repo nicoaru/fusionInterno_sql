@@ -4,19 +4,48 @@ const routerMueblesProd = Router()
 
 //
 // devuelve todos los muebles si no se pasan query, o filtrados por querys si se le pasan
-routerMueblesProd.get("/", (req, res) => {
-    const queryObject = req.query.queryObject 
-        ? JSON.parse(req.query.queryObject)
-        : {}
-    const customResult = req.query.customResult
-        ? JSON.parse(req.query.customResult)
-        : {}
-    const findParams = {... queryObject, ...customResult}
+routerMueblesProd.get("/", async (req, res) => {
+    console.log("entró en GET api/muebles")
 
-    console.log('findParams api/muebles => ', findParams)
+    try {
+        const _query = req.query?.where 
+        ? JSON.parse(req.query.where)
+        : {}
 
-    MueblesProd.readMuebles(req, res, findParams)        
+        const customResultMuebles = {
+            include: {
+                pedido: { 
+                    include: {cliente: true}
+                },
+                estado: true,
+                estadosHistorico: {
+                    include: {estado: true}
+                },
+                insumos: {
+                    include: {insumo: true}
+                } 
+            }
+        }
+
+        const findParams = {where: {..._query}, ...customResultMuebles}
+
+        console.log('findParams en GET api/muebles => ', findParams)
+        try {
+            const resultado = await MueblesProd.readMany(findParams)
+            res.status(200).json(resultado)            
+        }
+        catch(err) {
+            const error = {message: err.message, code: 400}
+            res.status(400).json({error})        
+        }
+    }
+    catch(err) {
+        const error = {message: err.message, code: 500}
+        console.log({error})
+        res.status(500).json({error})
+    }
 })
+
 //
 // devuelve un mueble por id
 routerMueblesProd.get("/:id", (req, res) => {

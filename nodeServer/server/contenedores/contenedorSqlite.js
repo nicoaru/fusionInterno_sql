@@ -16,8 +16,8 @@ class ContenedorSqlite {
 //
     // Devuelve todos los registros que matchean con la query
     readMany(findParams) {
+        console.log("entró en contenedor.readMany")
         const model = this.modelName
-        console.log("queryObject => ", findParams)
         return prisma[model].findMany(findParams)
     }
 //    

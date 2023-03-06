@@ -20,8 +20,8 @@ ENDOPOINTS
     
 /api/muebles
 GET     /api/muebles
-            . puede recibir queryObject por queryParams
-            . devuelve todos los muebles que concuerden con el queryObject
+            . puede recibir una queryParam "where" conteniendo un objeto en formato JSON string // sí, por ahora se recibe el objeto con toda la query armada // luego veremos
+            . devuelve todos los muebles que concuerden con la query "where"
             . si no hay queryObject, devuelve todos los muebles
             . el mueble se envía con data extra: 
                 . pedido
@@ -94,3 +94,20 @@ DEL     /api/pedidos
 DEL     /api/pedidos/:id
 POST    /api/pedidos
 PATCH   /api/pedidos/:id
+
+
+
+
+EJEMPLO DE QUERY
+const where = { 
+  "linea": "Frank", 
+  "insumos": {
+    "some": {
+      "insumo": {
+        "nombre":{
+          "contains": "corredera"
+        }
+      }
+    }
+  }
+}

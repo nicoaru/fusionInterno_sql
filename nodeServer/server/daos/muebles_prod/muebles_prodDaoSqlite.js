@@ -7,11 +7,11 @@ class MueblesProdDaoSqlite extends ContenedorSqlite {
   }
 
 //
-  async readMuebles(req, res, findParams) {
-    const resultado = await this.readMany(findParams)
-    // console.log("resultado => ", _resultado)
-    res.json(resultado)
-  }
+  // async readMuebles(req, res, findParams) {
+  //   const resultado = await this.readMany(findParams)
+  //   // console.log("resultado => ", _resultado)
+  //   res.json(resultado)
+  // }
 //
   async readMuebleById(req, res, findParams) {
     try{
